@@ -8,6 +8,9 @@ $PROCESS_NAME = "test_program.exe" ;change this according to your test program's
 _main()
 
 func _main()
+	dim $written
+	dim $temp_ref
+	
 	; get the string to memwrite through inputbox
 	$str = InputBox("Mem Test", "Enter a string to pass to the remote function")
 	if (Not $str) Then return False
@@ -29,17 +32,13 @@ func _main()
 	; allocate memory to save the string inside the process
 	$alloc = _MemVirtualAllocEx($PROC, 0, StringLen($str), BitOR($MEM_COMMIT, $MEM_RESERVE), $PAGE_EXECUTE_READWRITE)
 
-
 	; write the string to the process memory
-	dim $written
 	$string_addr = _WinAPI_WriteProcessMemory($PROC, $alloc, $ptr, StringLen($str), $written)
-	$temp_buf = DllStructCreate("char["&StringLen($str)&"]")
 
 	; read the string from the process memory (optional)
-	dim $temp_ref
+	$temp_buf = DllStructCreate("char["&StringLen($str)&"]")
 	_WinAPI_ReadProcessMemory($PROC, $alloc, DllStructGetPtr($temp_buf), StringLen($str), $temp_ref)
-	$read = DllStructGetData($temp_buf, 1)
-	ConsoleWrite("["&$alloc&"] " &  $read & @LF)
+	ConsoleWrite("["&$alloc&"] " &  $DllStructGetData($temp_buf, 1) & @LF)
 
 	; open handle to Kernel32 and create a new thread on the remote process
 	$Kernel32 = DllOpen("Kernel32.dll")
